@@ -12,8 +12,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/leotaku/mobi"
-	"github.com/leotaku/mobi/records"
+	"github.com/behringer24/mobi"
+	"github.com/behringer24/mobi/records"
 	"golang.org/x/text/language"
 )
 

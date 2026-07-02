@@ -1,5 +1,5 @@
 // Package azw3 provides a write-only, high-level API for building AZW3
-// (Kindle KF8) ebooks. It wraps github.com/leotaku/mobi, which implements
+// (Kindle KF8) ebooks. It wraps github.com/behringer24/mobi, which implements
 // the underlying KF8 record and container format.
 //
 // Its shape mirrors github.com/writingtoole/epub: a Book you configure
