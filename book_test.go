@@ -2,6 +2,7 @@ package azw3_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -115,5 +116,45 @@ func TestAddLanguageRejectsInvalidTag(t *testing.T) {
 	b := azw3.New()
 	if err := b.AddLanguage("not-a-lang-tag-!!"); err != azw3.ErrInvalidLanguage {
 		t.Fatalf("expected ErrInvalidLanguage, got %v", err)
+	}
+}
+
+func TestNestedNavpointTOCIsRendered(t *testing.T) {
+	b := azw3.New()
+	b.SetTitle("Book With TOC")
+
+	ch1, err := b.AddChapter("ch1", "Chapter One", "<p>one</p>")
+	if err != nil {
+		t.Fatalf("AddChapter ch1: %v", err)
+	}
+	ch2, err := b.AddChapter("ch2", "Chapter Two", "<p>two</p>", 1)
+	if err != nil {
+		t.Fatalf("AddChapter ch2: %v", err)
+	}
+
+	part := b.AddNavpoint("Part I", "", 0)
+	part.AddNavpoint("Chapter One", string(ch1), 0)
+	part.AddNavpoint("Chapter Two", string(ch2), 1)
+
+	data, err := b.Serialize()
+	if err != nil {
+		t.Fatalf("Serialize: %v", err)
+	}
+	if len(data) == 0 {
+		t.Fatal("Serialize returned empty data")
+	}
+}
+
+func TestNavpointUnknownTargetFailsSerialize(t *testing.T) {
+	b := azw3.New()
+	b.SetTitle("Broken TOC")
+	if _, err := b.AddChapter("ch1", "Chapter One", "<p>one</p>"); err != nil {
+		t.Fatalf("AddChapter: %v", err)
+	}
+	b.AddNavpoint("Ghost Chapter", "does-not-exist", 0)
+
+	_, err := b.Serialize()
+	if !errors.Is(err, azw3.ErrChapterNotFound) {
+		t.Fatalf("expected ErrChapterNotFound, got %v", err)
 	}
 }

@@ -23,4 +23,8 @@ var (
 	// ErrDuplicatePath is returned by AddChapter/AddImage/AddStylesheet
 	// when path is already in use by a previously added resource.
 	ErrDuplicatePath = errors.New("azw3: path already in use")
+
+	// ErrChapterNotFound is returned by Write/Serialize when a Navpoint's
+	// target does not match the Id of any chapter added via AddChapter.
+	ErrChapterNotFound = errors.New("azw3: navpoint target does not match any chapter")
 )

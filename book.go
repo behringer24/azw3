@@ -64,6 +64,7 @@ type chapterEntry struct {
 	id      Id
 	title   string
 	content string
+	anchor  string
 	order   int
 	seq     int
 }
@@ -161,6 +162,10 @@ func (b *Book) SetRightToLeft(v bool) {
 // entry in the Kindle reader's native, flat "Go To" chapter list, and
 // also as the label available to Book.AddNavpoint.
 //
+// A hidden anchor is inserted at the start of the chapter content so
+// Book.AddNavpoint can link to it from the generated table of contents
+// page; this has no visible effect on the rendered chapter.
+//
 // Returns ErrDuplicatePath if path is already in use.
 func (b *Book) AddChapter(path, title, contents string, order ...int) (Id, error) {
 	if b.usedPaths[path] {
@@ -174,12 +179,15 @@ func (b *Book) AddChapter(path, title, contents string, order ...int) (Id, error
 	}
 
 	id := Id(path)
+	seq := b.nextSeq()
+	anchor := fmt.Sprintf("azw3-ch%d", seq)
 	b.chapters = append(b.chapters, &chapterEntry{
 		id:      id,
 		title:   title,
-		content: contents,
+		content: fmt.Sprintf(`<a id="%s"></a>`, anchor) + contents,
+		anchor:  anchor,
 		order:   o,
-		seq:     b.nextSeq(),
+		seq:     seq,
 	})
 	return id, nil
 }
@@ -300,7 +308,10 @@ func (b *Book) Serialize() ([]byte, error) {
 		return nil, ErrNoContent
 	}
 
-	mb := b.toMobiBook()
+	mb, err := b.toMobiBook()
+	if err != nil {
+		return nil, err
+	}
 	buf := new(bytes.Buffer)
 	if err := realize(mb, buf); err != nil {
 		return nil, err
@@ -308,19 +319,39 @@ func (b *Book) Serialize() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (b *Book) toMobiBook() mobi.Book {
+// tocChapterTitle is the title given to the automatically generated
+// table of contents chapter, inserted at the very start of the book
+// whenever at least one Navpoint has been added.
+const tocChapterTitle = "Table of Contents"
+
+func (b *Book) toMobiBook() (mobi.Book, error) {
 	entries := make([]*chapterEntry, len(b.chapters))
 	copy(entries, b.chapters)
 	sort.SliceStable(entries, func(i, j int) bool {
 		return entries[i].order < entries[j].order
 	})
 
-	chapters := make([]mobi.Chapter, len(entries))
-	for i, e := range entries {
-		chapters[i] = mobi.Chapter{
+	anchors := make(map[Id]string, len(entries))
+	for _, e := range entries {
+		anchors[e.id] = e.anchor
+	}
+
+	var chapters []mobi.Chapter
+	if len(b.nav) > 0 {
+		toc, err := renderNavpoints(sortedNavpoints(b.nav), anchors)
+		if err != nil {
+			return mobi.Book{}, err
+		}
+		chapters = append(chapters, mobi.Chapter{
+			Title:  tocChapterTitle,
+			Chunks: mobi.Chunks(toc),
+		})
+	}
+	for _, e := range entries {
+		chapters = append(chapters, mobi.Chapter{
 			Title:  e.title,
 			Chunks: mobi.Chunks(e.content),
-		}
+		})
 	}
 
 	authors := make([]string, len(b.authors))
@@ -351,7 +382,7 @@ func (b *Book) toMobiBook() mobi.Book {
 		Images:        b.images,
 		CoverImage:    b.coverImage,
 		UniqueID:      b.uniqueID,
-	}
+	}, nil
 }
 
 func (b *Book) nextSeq() int {
