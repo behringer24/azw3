@@ -1,4 +1,4 @@
-module azw3
+module github.com/behringer24/azw3
 
 go 1.23
 

@@ -19,12 +19,8 @@ relying on it for anything important.
 ## Installation
 
 ```sh
-go get github.com/<your-org-or-username>/azw3
+go get github.com/behringer24/azw3
 ```
-
-This repository's `go.mod` currently declares a placeholder module path
-(`azw3`, no domain). Update it with `go mod edit -module <real-path>` once
-the module has a permanent home, and adjust the import path above to match.
 
 ## Quick start
 
@@ -35,7 +31,7 @@ import (
 	"log"
 	"os"
 
-	"azw3"
+	"github.com/behringer24/azw3"
 )
 
 func main() {
@@ -102,8 +98,8 @@ errors returned rather than panics.
   book's cover.
 - **Output** — `Write(path)` and `Serialize()`.
 
-See the [package documentation](https://pkg.go.dev/) (or run `go doc` in
-this repository) for full details on every method.
+See the [package documentation](https://pkg.go.dev/github.com/behringer24/azw3)
+(or run `go doc` in this repository) for full details on every method.
 
 ## Design notes and limitations
 

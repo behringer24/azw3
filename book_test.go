@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"azw3"
+	"github.com/behringer24/azw3"
 )
 
 func testPNG(t *testing.T) []byte {
