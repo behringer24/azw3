@@ -135,6 +135,13 @@ from a literal EPUB-style API in a few places the format forces:
 - [Calibre](https://github.com/kovidgoyal/calibre)'s MOBI/KF8 writer
   source was a helpful reference for understanding the format itself.
 
+## Trademark notice
+
+"Kindle" and "AZW3" are trademarks of Amazon.com, Inc. or its affiliates.
+This project is an independent, community effort based on published,
+third-party documentation of the file format; it is not affiliated with,
+endorsed by, or sponsored by Amazon.
+
 ## License
 
 [MIT](LICENSE)
