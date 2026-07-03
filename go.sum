@@ -1,4 +1,4 @@
-github.com/behringer24/mobi v0.5.0 h1:JkjIv5gdSAU5DfAOz5HTr97Rq+BiUrQJhojVxNaYNOU=
-github.com/behringer24/mobi v0.5.0/go.mod h1:0Bmhx7vwgsKJZkj3IxbqKaSGuHxCKrQfPzlVFlIrKkM=
+github.com/behringer24/mobi v0.6.0 h1:ww/U92u4Oj4AVMnJVfiwU5guUy/pgFQpxb8jzAWG8CU=
+github.com/behringer24/mobi v0.6.0/go.mod h1:0Bmhx7vwgsKJZkj3IxbqKaSGuHxCKrQfPzlVFlIrKkM=
 golang.org/x/text v0.21.0 h1:zyQAAkrwaneQ066sspRyJaG9VNi/YJ1NfzcGB3hZ/qo=
 golang.org/x/text v0.21.0/go.mod h1:4IBbMaMmOPCJ8SecivzSH54+73PCFmPWxNTLm+vZkEQ=
