@@ -148,6 +148,8 @@ func TestNestedNavpointTOCIsRendered(t *testing.T) {
 func TestNavpointUnknownTargetFailsSerialize(t *testing.T) {
 	b := azw3.New()
 	b.SetTitle("Broken TOC")
+	// Navpoint targets are only resolved when the inline TOC is rendered.
+	b.SetInlineTOC(true)
 	if _, err := b.AddChapter("ch1", "Chapter One", "<p>one</p>"); err != nil {
 		t.Fatalf("AddChapter: %v", err)
 	}
@@ -156,5 +158,26 @@ func TestNavpointUnknownTargetFailsSerialize(t *testing.T) {
 	_, err := b.Serialize()
 	if !errors.Is(err, azw3.ErrChapterNotFound) {
 		t.Fatalf("expected ErrChapterNotFound, got %v", err)
+	}
+}
+
+func TestInlineTOCOffByDefault(t *testing.T) {
+	b := azw3.New()
+	b.SetTitle("No Inline TOC")
+	ch1, err := b.AddChapter("ch1", "Chapter One", "<p>one</p>")
+	if err != nil {
+		t.Fatalf("AddChapter: %v", err)
+	}
+	// Without SetInlineTOC(true) an unknown target must not matter and no
+	// TOC chapter may be generated.
+	b.AddNavpoint("Chapter One", string(ch1), 0)
+	b.AddNavpoint("Ghost Chapter", "does-not-exist", 1)
+
+	data, err := b.Serialize()
+	if err != nil {
+		t.Fatalf("Serialize: %v", err)
+	}
+	if bytes.Contains(data, []byte("Table of Contents")) {
+		t.Fatal("inline TOC chapter generated although SetInlineTOC was not called")
 	}
 }

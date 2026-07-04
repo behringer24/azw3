@@ -41,6 +41,7 @@ type Book struct {
 
 	fixedLayout bool
 	rightToLeft bool
+	inlineTOC   bool
 
 	chapters []*chapterEntry
 	css      []string
@@ -150,6 +151,15 @@ func (b *Book) SetFixedLayout(v bool) {
 // SetRightToLeft sets the book's primary reading direction.
 func (b *Book) SetRightToLeft(v bool) {
 	b.rightToLeft = v
+}
+
+// SetInlineTOC controls whether a "Table of Contents" chapter, generated
+// from the Navpoint tree, is inserted at the very start of the book. It is
+// off by default: the Kindle's own "Go To" menu is always available via the
+// NCX, and callers that want a table of contents page in the content flow
+// usually generate their own. Has no effect if no Navpoints are added.
+func (b *Book) SetInlineTOC(v bool) {
+	b.inlineTOC = v
 }
 
 // --- Content ---
@@ -319,9 +329,9 @@ func (b *Book) Serialize() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// tocChapterTitle is the title given to the automatically generated
-// table of contents chapter, inserted at the very start of the book
-// whenever at least one Navpoint has been added.
+// tocChapterTitle is the title given to the generated table of contents
+// chapter, inserted at the very start of the book when SetInlineTOC(true)
+// was called and at least one Navpoint has been added.
 const tocChapterTitle = "Table of Contents"
 
 func (b *Book) toMobiBook() (mobi.Book, error) {
@@ -337,7 +347,7 @@ func (b *Book) toMobiBook() (mobi.Book, error) {
 	}
 
 	var chapters []mobi.Chapter
-	if len(b.nav) > 0 {
+	if b.inlineTOC && len(b.nav) > 0 {
 		toc, err := renderNavpoints(sortedNavpoints(b.nav), anchors)
 		if err != nil {
 			return mobi.Book{}, err
