@@ -411,6 +411,9 @@ func (b *Book) toMobiBook() (mobi.Book, error) {
 		UniqueID:         b.uniqueID,
 		HasStartReading:  hasStart,
 		StartReadingChunk: startChunk,
+		// PalmDOC-compress the text records, as kindlegen and calibre do.
+		// Navigation is unaffected (offsets address the decompressed stream).
+		Compress: true,
 	}
 	// Supply the EPUB-namespaced skeleton template (see template.go) instead
 	// of touching the mobi fork's default; needed for epub:type footnotes.
