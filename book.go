@@ -42,6 +42,7 @@ type Book struct {
 	fixedLayout bool
 	rightToLeft bool
 	inlineTOC   bool
+	startReading Id
 
 	chapters []*chapterEntry
 	css      []string
@@ -151,6 +152,15 @@ func (b *Book) SetFixedLayout(v bool) {
 // SetRightToLeft sets the book's primary reading direction.
 func (b *Book) SetRightToLeft(v bool) {
 	b.rightToLeft = v
+}
+
+// SetStartReading marks the chapter (by the Id returned from AddChapter) at
+// which body content begins. The Kindle opens here for "Go To > Beginning",
+// skipping cover and table-of-contents front matter (EXTH 116, the KF8
+// counterpart of the EPUB bodymatter landmark). Unknown or unset ids are
+// ignored.
+func (b *Book) SetStartReading(id Id) {
+	b.startReading = id
 }
 
 // SetInlineTOC controls whether a "Table of Contents" chapter, generated
@@ -357,11 +367,18 @@ func (b *Book) toMobiBook() (mobi.Book, error) {
 			Chunks: mobi.Chunks(toc),
 		})
 	}
-	for _, e := range entries {
+	// Base offset: each chapter becomes exactly one chunk, after the optional
+	// inline TOC chunk. Locate the start-reading chapter to derive its chunk.
+	chunkBase := len(chapters)
+	hasStart, startChunk := false, 0
+	for i, e := range entries {
 		chapters = append(chapters, mobi.Chapter{
 			Title:  e.title,
 			Chunks: mobi.Chunks(e.content),
 		})
+		if b.startReading != "" && e.id == b.startReading {
+			hasStart, startChunk = true, chunkBase+i
+		}
 	}
 
 	authors := make([]string, len(b.authors))
@@ -377,7 +394,7 @@ func (b *Book) toMobiBook() (mobi.Book, error) {
 		publisher = b.publishers[0]
 	}
 
-	return mobi.Book{
+	mb := mobi.Book{
 		Title:         b.title,
 		Authors:       authors,
 		Contributors:  contributors,
@@ -387,12 +404,18 @@ func (b *Book) toMobiBook() (mobi.Book, error) {
 		Language:      b.language,
 		FixedLayout:   b.fixedLayout,
 		RightToLeft:   b.rightToLeft,
-		Chapters:      chapters,
-		CSSFlows:      b.css,
-		Images:        b.images,
-		CoverImage:    b.coverImage,
-		UniqueID:      b.uniqueID,
-	}, nil
+		Chapters:         chapters,
+		CSSFlows:         b.css,
+		Images:           b.images,
+		CoverImage:       b.coverImage,
+		UniqueID:         b.uniqueID,
+		HasStartReading:  hasStart,
+		StartReadingChunk: startChunk,
+	}
+	// Supply the EPUB-namespaced skeleton template (see template.go) instead
+	// of touching the mobi fork's default; needed for epub:type footnotes.
+	mb.OverrideTemplate(*kf8Template)
+	return mb, nil
 }
 
 func (b *Book) nextSeq() int {
