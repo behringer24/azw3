@@ -367,18 +367,20 @@ func (b *Book) toMobiBook() (mobi.Book, error) {
 			Chunks: mobi.Chunks(toc),
 		})
 	}
-	// Base offset: each chapter becomes exactly one chunk, after the optional
-	// inline TOC chunk. Locate the start-reading chapter to derive its chunk.
-	chunkBase := len(chapters)
+	// Each entry is one chapter = one mobi skeleton; mobi splits oversized
+	// chapter content into KF8 chunks internally. chapBase accounts for the
+	// optional inline TOC chapter so the start-reading marker points at the
+	// right skeleton.
+	chapBase := len(chapters)
 	hasStart, startChunk := false, 0
 	for i, e := range entries {
+		if b.startReading != "" && e.id == b.startReading {
+			hasStart, startChunk = true, chapBase+i
+		}
 		chapters = append(chapters, mobi.Chapter{
 			Title:  e.title,
 			Chunks: mobi.Chunks(e.content),
 		})
-		if b.startReading != "" && e.id == b.startReading {
-			hasStart, startChunk = true, chunkBase+i
-		}
 	}
 
 	authors := make([]string, len(b.authors))
